@@ -31,7 +31,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = "sua_chave_secreta" 
 
 # Configuração do banco de dados (SQLite local)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db' 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:admin123@127.0.0.1:3306/flask-crud' # Substitua 'senha' pela senha do seu MySQL
 
 
 # CONFIGURAÇÃO DO LOGIN E BANCO
@@ -87,7 +87,6 @@ def logout():
 
 # CRIAR USUÁRIO (CREATE)
 @app.route('/user', methods=['POST'])
-@login_required
 def create_user():
 
     # Cria novo usuário no banco
@@ -98,7 +97,7 @@ def create_user():
     if username and password:
 
         # Cria objeto User
-        user = User (username=username, password=password)
+        user = User (username=username, password=password, role="user") # role padrão é "user"
         db.session.add(user) # Cria objeto User
         db.session.commit()  # Salva no banco de dados
         return jsonify({"Menssagem": "Usuario cadastrado com sucesso"})

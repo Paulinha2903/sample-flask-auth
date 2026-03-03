@@ -1,0 +1,16 @@
+services:
+  db: 
+    image: mysql:latest # imagem oficial do MySQL
+    restart: always # reinicia o container automaticamente em caso de falha
+    environment:
+      MYSQL_USER: 'admin' # nome do usuario do banco de dados
+      MYSQL_PASSWORD: 'admin123' # senha do usuario do banco de dados
+      MYSQL_DATABASE: 'flask-crud' # nome do banco de dados a ser criado
+      MYSQL_ROOT_PASSWORD: 'admin123' # senha do usuario root do banco de dados
+    ports:
+      - "3306:3306" # mapeia a porta 3306 do container para a porta 3306 do host
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+    volumes:
+      - \Users\Paulinha\OneDrive\Documentos\GitHub\sample-flask-auth
