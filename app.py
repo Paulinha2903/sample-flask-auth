@@ -18,6 +18,8 @@ from flask_login import LoginManager, login_user, current_user, logout_user, log
 # logout_user() → encerra sessão
 # login_required → protege rotas
 
+import bcrypt # Biblioteca para hash de senhas (opcional, mas recomendado para segurança)
+
 
 # Apenas para confirmar que o arquivo está sendo executado
 print("APP INICIANDO...")
@@ -69,7 +71,8 @@ def login():
         user = User.query.filter_by(username=username).first()
 
         # Verifica se usuário existe e senha confere
-        if user and user.password == password:
+        if user and bcrypt.checkpw(str.encode(password), str.encode(user.password)): # Verifica senha usando bcrypt (comparando senha fornecida com hash armazenado)
+
             login_user(user) # Cria sessão
             print(current_user.is_authenticated)
             return jsonify({"Menssagem": "Autenticacao realizada com sucesso"}), 200
@@ -96,8 +99,10 @@ def create_user():
 
     if username and password:
 
+        hash_password = bcrypt.hashpw(str.encode(password), bcrypt.gensalt())  # Aqui você pode implementar uma função de hash para a senha, como bcrypt ou werkzeug.security.generate_password_hash(password) para maior segurança.
+
         # Cria objeto User
-        user = User (username=username, password=password, role="user") # role padrão é "user"
+        user = User (username=username, password=hash_password, role="user") # role padrão é "user"
         db.session.add(user) # Cria objeto User
         db.session.commit()  # Salva no banco de dados
         return jsonify({"Menssagem": "Usuario cadastrado com sucesso"})
@@ -126,11 +131,11 @@ def update_user(id_user):
     data = request.json
     user = User.query.get(id_user)
 
-    if id_user != current_user.id and current_user.role == "user":
+    if id_user != current_user.id and current_user.role == "user": # Permite atualização apenas para administradores ou para o próprio usuário
         return jsonify ({"Menssagem": "Atualizacao nao permitida"}), 403
     
-    if user and data.get("password"):
-        user.password = data.get("password")
+    if user and data.get("password"): # Verifica se usuário existe e se nova senha foi fornecida
+        user.password = data.get("password")  # Atualiza senha
         db.session.commit()
 
         return jsonify ({"Menssagem": f"Usuario {id_user} atualizado com sucesso"})
@@ -140,17 +145,18 @@ def update_user(id_user):
 # DELETAR USUÁRIO (DELETE)
 @app.route('/user/<int:id_user>', methods=['DELETE'])
 @login_required
-def delete_user(id_user):
-    user = User.query.get(id_user)
+def delete_user(id_user): 
+    user = User.query.get(id_user) # Busca usuário pelo ID
 
-    if current_user.role != "admin":
-        return jsonify ({"Menssagem": "Delecao nao permitida"}), 403
+    if current_user.role != "admin": # Permite deleção apenas para administradores
+        return jsonify ({"Menssagem": "Delecao nao permitida"}), 403 # 403 = Forbidden (proibido)
 
     # Impede que usuário delete a si mesmo
     if id_user == current_user.id:
         return jsonify ({"Menssagem": "Delecao nao permitida"}), 403
     
-    if user:
+    # Verifica se usuário existe
+    if user: 
         db.session.delete(user)
         db.session.commit()
         return jsonify({"Menssagem": f"Usuario {id_user} deletado com sucesso"})
