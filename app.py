@@ -31,7 +31,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = "sua_chave_secreta" 
 
 # Configuração do banco de dados (SQLite local)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:admin123@127.0.0.1:3306/flask-crud' # Substitua 'senha' pela senha do seu MySQL
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:admin123@127.0.0.1:3306/users' # Substitua 'senha' pela senha do seu MySQL
 
 
 # CONFIGURAÇÃO DO LOGIN E BANCO
@@ -126,6 +126,9 @@ def update_user(id_user):
     data = request.json
     user = User.query.get(id_user)
 
+    if id_user != current_user.id and current_user.role == "user":
+        return jsonify ({"Menssagem": "Atualizacao nao permitida"}), 403
+    
     if user and data.get("password"):
         user.password = data.get("password")
         db.session.commit()
@@ -139,6 +142,9 @@ def update_user(id_user):
 @login_required
 def delete_user(id_user):
     user = User.query.get(id_user)
+
+    if current_user.role != "admin":
+        return jsonify ({"Menssagem": "Delecao nao permitida"}), 403
 
     # Impede que usuário delete a si mesmo
     if id_user == current_user.id:
